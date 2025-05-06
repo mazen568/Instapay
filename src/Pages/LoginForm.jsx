@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { replace, useNavigate } from "react-router-dom";
 import DollarLogo from "../assets/InstaPayIcon.svg";
 import axios from "axios"; // Import Axios
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"; // Import Eye icons
@@ -8,9 +8,10 @@ import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, enteredValues, setEnteredValues, edited, setEdited }) => {
     const [loginError, setLoginError] = useState("");
-    const [suspendedAlert, setSuspendedAlert] = useState(false); // For suspended alert
     const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const navigate = useNavigate();
+    
+
 
     // Updated Email Regex for validation: Must include @ and .com
     const emailRegex = /^[^\s@]+@[^\s@]+\.[cC][oO][mM]$/;
@@ -21,6 +22,10 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
 
     async function handleSubmit(event) {
         event.preventDefault();
+        const userServiceUrl = import.meta.env.VITE_USER_SERVICE_URL; // Use import.meta.env instead
+        console.log(userServiceUrl);
+        
+
         const { email, password } = enteredValues;
 
         if (emailIsInvalid || passwordIsInvalid) {
@@ -30,30 +35,29 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
 
         try {
             // Make the API call to login
-            const response = await axios.post("http://localhost:3000/auth/login", {
+            const response = await axios.post(`${userServiceUrl}/api/auth/login`,{
                 email,
                 password,
             });
 
-            // Check if the user is active
-            if (!response.data.user.isActive) {
-                setSuspendedAlert(true); // Show suspended alert
-                return;
-            }
+            // // Check if the user is active
+            // if (!response.data.user.isActive) {
+            //     setSuspendedAlert(true); // Show suspended alert
+            //     return;  
+            // }
 
-            if (response.data.token) {
+          
                 setLoginError(""); // Clear any existing error message
-                setSuspendedAlert(false); // Clear suspended alert
 
                 // Save the token in local storage (or you can use context)
                 localStorage.setItem("token", response.data.token);
-               
+
                 // Update state with user details
                 setEnteredValues({
                     ...enteredValues,
-                    name: response.data.user.name,
-                    email: response.data.user.email,
-                    isAdmin: response.data.user.isAdmin,
+                    name: response.data.username,
+                    email: response.data.email,
+                    // isAdmin: response.data.user.isAdmin,
                 });
 
                 console.log("Login successful!");
@@ -61,19 +65,21 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
                     position: "top-right"
                 });
 
-             
-                console.log(response.data.token);
-                console.log(response.data.user);
 
-                console.log(response.data.user.isAdmin);    
+  console.log(response.data.data.token);
+  
+
+
+                // console.log(response.data.user.isAdmin);
 
                 // Check if the user is an admin and navigate accordingly
-                if (response.data.user.isAdmin) {
-                    navigate("/admin", { replace: true });
-                } else {
-                    navigate("/home", { replace: true });
-                }
-            }
+                // if (response.data.user.isAdmin) {
+                //     navigate("/admin", { replace: true });
+                // } else {
+                //     navigate("/home", { replace: true });
+                // }
+                navigate("/home", { replace: true });
+            
         } catch (error) {
             setLoginError("Invalid email or password. Please try again.");
             console.error("Login error:", error);
@@ -82,7 +88,6 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
 
     function handleInputChange(identifier, value) {
         setLoginError("");
-        setSuspendedAlert(false); // Clear suspended alert on input change
         setEdited((prevEdited) => ({
             ...prevEdited,
             [identifier]: false,
@@ -106,7 +111,7 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
             animate={{ x: loginMove }}
             className="w-full sm:w-1/2 p-6 sm:p-12 flex flex-col justify-center bg-white"
         >
-            
+
             <div className="text-center mb-16">
                 <img src={DollarLogo} alt="Robot Photo" className="w-[100px] mx-auto mb-6" />
                 <h2 className="text-2xl sm:text-3xl font-semibold text-welcome-text-h2 mb-4">
@@ -118,15 +123,7 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
             </div>
 
             {/* Suspended Alert */}
-            {suspendedAlert && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4">
-                    <strong className="font-bold">Account Suspended!</strong>
-                    <span className="block sm:inline">
-                        {" "}You are suspended. Please contact support for assistance.
-                    </span>
-                </div>
-            )}
-
+           
             <form className="space-y-6 mt-6 min-h-[200px]" onSubmit={handleSubmit}>
                 <div className="mb-6">
                     <div className="space-y-2 mb-8">
@@ -193,7 +190,7 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
                 )}
                 <button
                     className="w-full sm:w-[392px] bg-social-button text-white p-3 rounded-md hover:bg-purple-700 transition mx-0 sm:ml-16"
-                  
+
                 >
                     Login
                 </button>

@@ -18,6 +18,9 @@ export default function HomePage({focus,setFocus}) {
 
   const [name, setName] = useState();
 
+  console.log(localStorage.getItem("token"));
+  
+
 
   useEffect(() => {
     const fetchUserStatus = async () => {
