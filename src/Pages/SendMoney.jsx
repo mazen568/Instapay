@@ -3,21 +3,23 @@ import Input from "../Components/Input";
 import { useState } from "react";
 import axios from "axios"; // Import Axios
 import { toast } from "react-toastify";
+import { useDispatch, useSelector } from "react-redux";
+import { authActions } from "../store";
 
 const SendMoney = () => {
     const [formData, setFormData] = useState({
-        accountNumber: "",
-        bankAccount: "",
+        email: "", // Changed from accountNumber to email
         amount: "",
-        transferType: "", // instant or scheduled
     });
 
     const [errors, setErrors] = useState({
-        accountNumber: "",
-        bankAccount: "",
+        email: "", // Changed from accountNumber to email
         amount: "",
-        transferType: "",
     });
+    const balance = useSelector((state) => state.auth.balance);
+    const email = useSelector((state) => state.auth.email);
+    const dispatch = useDispatch();
+    console.log(balance);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[cC][oO][mM]$/; // Regex for email validation
 
@@ -35,41 +37,31 @@ const SendMoney = () => {
     }
 
     // Function to validate the form data before submission
-    // Function to validate the form data before submission
     function validateFormData() {
         let isValid = true;
 
-        // Validate account number (must be non-empty and numeric)
-        if (!formData.accountNumber) {
+        // Validate email (must be non-empty, match email regex, and not be the user's own email)
+        if (!formData.email) {
             setErrors(prevErrors => ({
                 ...prevErrors,
-                accountNumber: "Account number is required",
+                email: "Receiver email is required",
             }));
             isValid = false;
-        } else if (!/^\d+$/.test(formData.accountNumber)) {
+        } else if (!emailRegex.test(formData.email)) {
             setErrors(prevErrors => ({
                 ...prevErrors,
-                accountNumber: "Account number must contain only numbers",
+                email: "Invalid email format",
             }));
             isValid = false;
-        }
-
-        // Validate bank account (must be non-empty and numeric)
-        if (!formData.bankAccount) {
+        } else if (formData.email === email) {
             setErrors(prevErrors => ({
                 ...prevErrors,
-                bankAccount: "Bank account is required",
-            }));
-            isValid = false;
-        } else if (!/^\d+$/.test(formData.bankAccount)) {
-            setErrors(prevErrors => ({
-                ...prevErrors,
-                bankAccount: "Bank account must contain only numbers",
+                email: "You cannot send money to yourself",
             }));
             isValid = false;
         }
 
-        // Validate amount (must be non-empty and numeric)
+        // Validate amount (must be non-empty, numeric, and not exceed balance)
         if (!formData.amount) {
             setErrors(prevErrors => ({
                 ...prevErrors,
@@ -82,13 +74,10 @@ const SendMoney = () => {
                 amount: "Amount must be a valid number greater than 0",
             }));
             isValid = false;
-        }
-
-        // Validate transfer type (must be selected)
-        if (!formData.transferType) {
+        } else if (parseFloat(formData.amount) > balance) {
             setErrors(prevErrors => ({
                 ...prevErrors,
-                transferType: "Transfer type is required",
+                amount: "Amount exceeds your available balance",
             }));
             isValid = false;
         }
@@ -96,21 +85,18 @@ const SendMoney = () => {
         return isValid;
     }
 
-
     // Handle form submission
     async function handleSubmit(event) {
         event.preventDefault();
-
+        const transactionServiceUrl = import.meta.env.VITE_TRANSACTION_SERVICE_URL;
         if (validateFormData()) {
             try {
                 const token = localStorage.getItem('token'); // Example: Retrieve token from storage
                 const response = await axios.post(
-                    "http://localhost:3000/transactions/make-transaction",
+                    `${transactionServiceUrl}/api/transaction/send`,
                     {
-                        senderAccountNumber: formData.accountNumber,
-                        receiverAccountNumber: formData.bankAccount,
+                        receiverEmail: formData.email, // Changed from accountNumber to email
                         amount: parseFloat(formData.amount),
-                        transactionType: formData.transferType,
                     },
                     {
                         headers: {
@@ -118,17 +104,16 @@ const SendMoney = () => {
                         },
                     }
                 );
-              console.log(response.data);
-              
-                
 
                 if (response.data) {
                     toast.success(response.data.message);
+
+                    // Dispatch the updated balance
+                    dispatch(authActions.addBalance(balance - parseFloat(formData.amount)));
+
                     setFormData({
-                        accountNumber: "",
-                        bankAccount: "",
+                        email: "", // Reset email field
                         amount: "",
-                        transferType: "",
                     });
                 }
             } catch (error) {
@@ -138,36 +123,21 @@ const SendMoney = () => {
         }
     }
 
-
-
     return (
         <div className="form-container">
             <form className="form" onSubmit={handleSubmit}>
                 <div className="input">
                     <Input
-                        label="Your Bank Account Number"
-                        type="text"
-                        id="account"
-                        name="account"
-                        placeholder="Enter Account or Phone Number"
-                        className={`input-field ${errors.accountNumber ? "input-error" : ""}`}
-                        value={formData.accountNumber}
-                        onChange={(event) => handleInputChange("accountNumber", event.target.value)}
-                    />
-                    {errors.accountNumber && <span className="error-message">{errors.accountNumber}</span>}
-                </div>
-                <div className="input">
-                    <Input
-                        label="Receiver Bank Account Number"
-                        type="text"
+                        label="Receiver Email"
+                        type="email"
                         id="email"
                         name="email"
-                        placeholder="Enter Source Bank Account"
-                        className={`input-field ${errors.bankAccount ? "input-error" : ""}`}
-                        value={formData.bankAccount}
-                        onChange={(event) => handleInputChange("bankAccount", event.target.value)}
+                        placeholder="Enter Receiver Email"
+                        className={`input-field ${errors.email ? "input-error" : ""}`}
+                        value={formData.email}
+                        onChange={(event) => handleInputChange("email", event.target.value)}
                     />
-                    {errors.bankAccount && <span className="error-message">{errors.bankAccount}</span>}
+                    {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
                 <div className="input">
                     <Input
@@ -181,37 +151,9 @@ const SendMoney = () => {
                         onChange={(event) => handleInputChange("amount", event.target.value)}
                     />
                     {errors.amount && <span className="error-message">{errors.amount}</span>}
-
                 </div>
-                <div className="form-field checkboxes">
-                    <label>Transfer Type</label>
-                    <div className="radio-buttons">
-                        <label>
-                            <input
-                                type="radio"
-                                name="transfer-type"
-                                value="INSTANT"
-                                checked={formData.transferType === "INSTANT"}
-                                onChange={(event) => handleInputChange("transferType", event.target.value)}
-                            />
-                            <span className="radio-btn"></span> Instant
-                        </label>
-                        <label>
-                            <input
-                                type="radio"
-                                name="transfer-type"
-                                value="SCHEDULED"
-                                checked={formData.transferType === "SCHEDULED"}
-                                onChange={(event) => handleInputChange("transferType", event.target.value)}
-                            />
-                            <span className="radio-btn"></span> Scheduled
-                        </label>
-                    </div>
-                    {errors.transferType && <span style={{ position: "relative", top: "3px" }} className="error-message">{errors.transferType}</span>}
-                </div>
-
-                <div >
-                    <button type="submit" className="submit-button  bg-button-bg-color rounded-sm">Submit</button>
+                <div>
+                    <button type="submit" className="submit-button bg-button-bg-color rounded-sm">Submit</button>
                 </div>
             </form>
         </div>

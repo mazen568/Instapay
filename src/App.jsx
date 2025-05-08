@@ -16,6 +16,9 @@ function App() {
   const [adminTabs, setAdminTabs] = useState({ tab: "users" });
   const [recentTransaction, setRecentTransaction] = useState(false);
   const [focus, setFocus] = useState("send");  // Store the focused item
+  
+  
+
 
 
   const [enteredValues, setEnteredValues] = useState({

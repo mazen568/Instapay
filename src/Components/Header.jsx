@@ -3,10 +3,14 @@ import { Link, useNavigate } from "react-router-dom";
 import InstaPayIcon from "../assets/InstaPayIcon.svg";
 import RingImage from "../assets/RingImage.svg";
 import ProfileIcon from "../assets/ProfileIcon.svg";
+import { useDispatch, useSelector } from "react-redux";
+import { authActions } from "../store";
 
 export default function Header() {
   const [unreadCount, setUnreadCount] = useState(0);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const isLoggedIn = useSelector(state => state.auth.isLoggedIn);
 
   useEffect(() => {
     setUnreadCount(2); // Replace with dynamic count
@@ -23,8 +27,7 @@ export default function Header() {
 
   const handleLogout = () => {
     // Clear any authentication tokens or session data
-
-    localStorage.removeItem("token");  // Clear token from localStorage
+    dispatch(authActions.logout())
     sessionStorage.clear();  // Clear any session data if used
     navigate('/', { replace: true }); // Redirect to login page
   };
@@ -68,21 +71,32 @@ export default function Header() {
           Contact
         </span>
         <div className="flex items-center space-x-4">
-          <Link to="/notifications" className="relative hover:scale-125">
-            <img src={RingImage} alt="Notifications" className="w-6 h-6" />
-            {unreadCount > 0 && (
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
-            )}
-          </Link>
-          <Link to="/profile" className="hover:scale-125">
-            <img src={ProfileIcon} alt="Profile Icon" className="w-6 h-6" />
-          </Link>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-1 text-white bg-view-button-bg-color hover:bg-purple-500 rounded shadow transition-all duration-200"
-          >
-            Logout
-          </button >
+          {isLoggedIn ? (
+            <>
+              <Link to="/notifications" className="relative hover:scale-125">
+                <img src={RingImage} alt="Notifications" className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 w-2 h-2 bg-red-600 rounded-full border border-white"></span>
+                )}
+              </Link>
+              <Link to="/profile" className="hover:scale-125">
+                <img src={ProfileIcon} alt="Profile Icon" className="w-6 h-6" />
+              </Link>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-1 text-white bg-view-button-bg-color hover:bg-purple-500 rounded shadow transition-all duration-200"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/')}
+              className="px-4 py-1 text-white bg-purple-600 hover:bg-purple-500 rounded shadow transition-all duration-200"
+            >
+              Login
+            </button>
+          )}
         </div>
       </nav>
     </header>

@@ -5,14 +5,18 @@ import DollarLogo from "../assets/InstaPayIcon.svg";
 import axios from "axios"; // Import Axios
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"; // Import Eye icons
 import { ToastContainer, toast } from "react-toastify";
+import { useDispatch } from "react-redux";
 import "react-toastify/dist/ReactToastify.css";
+import { authActions } from "../store";
 const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, enteredValues, setEnteredValues, edited, setEdited }) => {
     const [loginError, setLoginError] = useState("");
     const [showPassword, setShowPassword] = useState(false); // State to toggle password visibility
     const navigate = useNavigate();
+    const dispatch=useDispatch();
     
-
-
+    const userServiceUrl = import.meta.env.VITE_USER_SERVICE_URL;
+    console.log(userServiceUrl); // Should print the URL, e.g., http://localhost:3001
+    
     // Updated Email Regex for validation: Must include @ and .com
     const emailRegex = /^[^\s@]+@[^\s@]+\.[cC][oO][mM]$/;
     const emailIsInvalid = edited.email && !emailRegex.test(enteredValues.email);
@@ -22,7 +26,7 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
 
     async function handleSubmit(event) {
         event.preventDefault();
-        const userServiceUrl = import.meta.env.VITE_USER_SERVICE_URL; // Use import.meta.env instead
+        const userServiceUrl = import.meta.env.VITE_USER_SERVICE_URL; 
         console.log(userServiceUrl);
         
 
@@ -40,19 +44,21 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
                 password,
             });
 
-            // // Check if the user is active
-            // if (!response.data.user.isActive) {
-            //     setSuspendedAlert(true); // Show suspended alert
-            //     return;  
-            // }
-
-          
-                setLoginError(""); // Clear any existing error message
-
-                // Save the token in local storage (or you can use context)
-                localStorage.setItem("token", response.data.token);
-
-                // Update state with user details
+        
+                setLoginError(""); 
+                const token =response.data.data.token;
+                console.log(response.data.data.username);
+                console.log(response.data.data);
+                
+                console.log(response.data.data.email);
+                console.log(response.data.data.token);
+                localStorage.setItem('username', response.data.data.username);
+                localStorage.setItem("email",response.data.data.email);   
+                localStorage.setItem("id",response.data.data.userId); 
+                localStorage.setItem("token", response.data.data.token);
+                localStorage.setItem("id",response.data.data.userId);       
+                console.log(response.data.data);
+                
                 setEnteredValues({
                     ...enteredValues,
                     name: response.data.username,
@@ -66,7 +72,7 @@ const LoginForm = ({ setMoveImage, setSignUpButton, setLoginMove, loginMove, ent
                 });
 
 
-  console.log(response.data.data.token);
+           console.log(response.data.data.token);
   
 
 

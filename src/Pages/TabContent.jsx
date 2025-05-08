@@ -8,9 +8,11 @@ import SetTrasactionLimits from "./SetTrasactionLimits"
 import ReceiveMoney from "./RecieveMoney"
 import RefundAndDisputeResolution from "./Refund&DisputeResolution"
 import { motion, AnimatePresence, useElementScroll } from "framer-motion";
+import { useSelector } from "react-redux"
 import "../custom.css";
 import { useParams } from "react-router-dom"
 import { useEffect } from "react"
+import { NotLoggedIn } from "./NotLoggedIn"
 function TabContent({ handleTabs, setHandleTabs, enteredValues,focus,setFocus}) {
     const pageVariants = {
         hidden: { opacity: 0, x: -50 }, // Initial state: fades out and slides left
@@ -18,12 +20,18 @@ function TabContent({ handleTabs, setHandleTabs, enteredValues,focus,setFocus}) 
         exit: { opacity: 0, x: 50 }, // Exit animation: fades out and slides right
     };
     const { tabId } = useParams();
+    const isLoggedIn=useSelector(state=>state.auth.isLoggedIn);
 
     useEffect(() => {
         // When the URL changes, update handleTabs state
         setHandleTabs({ tab: tabId });
     }, [tabId]);
+  
 
+    if(!isLoggedIn)
+    {
+        return <NotLoggedIn/>
+    }
 
     return (
         <>

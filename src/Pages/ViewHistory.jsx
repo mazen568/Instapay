@@ -4,93 +4,71 @@ import ToIcon from "../assets/To.png";  // Import ToIcon image
 import FromIcon from "../assets/From.png";  // Import FromIcon image
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { useSelector } from "react-redux";
 
 function ViewHistory() {
     const [userHistory, setUserHistory] = useState([]);  // Default to an empty array
     const [loggedInUser, setLoggedInUser] = useState(null);
+    const username = useSelector((state) => state.auth.username);
+    const userId = useSelector((state) => state.auth.id);
+
 
     // Fetch user transaction history on component mount
     useEffect(() => {
-        const fetchUserStatus = async () => {
+        const fetchUserTransactions = async () => {
             const token = localStorage.getItem("token");
+            const transactionServiceUrl = import.meta.env.VITE_TRANSACTION_SERVICE_URL;
             try {
-                const response = await axios.get("http://localhost:3000/auth/status", {
+                const response = await axios.get(`${transactionServiceUrl}/api/transaction`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-                console.log("User data fetched:", response.data);
+                console.log("transactions fetched:", response.data.data);
                 setLoggedInUser(response.data.name);
+                setUserHistory(response.data.data); // Set the transaction history data
             } catch (err) {
                 console.log("Error fetching user data:", err.response || err);
                 console.log(token);
             }
         };
 
-        fetchUserStatus();
-    }, []);
-
-    useEffect(() => {
-        const fetchTransactions = async () => {
-            const token = localStorage.getItem("token");
-            try {
-                const response = await axios.get("http://localhost:3000/transactions/show-all", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                setUserHistory(response.data.data); // Set the transaction history data
-                console.log(response.data.data);
-                
-            } catch (err) {
-                console.log("Error fetching transaction data:", err.response || err);
-            }
-        };
-
-        fetchTransactions();
+        fetchUserTransactions();
     }, []);
 
     return (
         <div className="form-container container">
             {userHistory.length > 0 ? (
                 userHistory.map((transaction) => (
-                    <div key={transaction.id} className="list-item">
+                    <div key={transaction._id} className="list-item">
                         {/* Transaction Details */}
                         <div className="details">
-                            {/* Dynamically set image based on sender or receiver */}
                             <img
-                                src={loggedInUser === transaction.sender.name ? FromIcon : ToIcon}  // Show FromIcon if sender, ToIcon if receiver
-                                alt={loggedInUser === transaction.sender.name ? "From-icon" : "To-icon"}
+                                src={FromIcon}  // Use a single icon for all transactions
+                                alt="Transaction-icon"
                                 className="form-icon"
                             />
-                            <div className="person-details">
-                                <p className="number">
-                                    {/* Display associated account number based on the direction of transaction */}
-
-                                    {transaction.id}
-
+                            <div className="person-details flex flex-col space-y-1">
+                                <p className="text-sm font-medium text-gray-500">
+                                    {/* Display transaction ID */}
                                 </p>
-                                <p className="name">
-                                    {/* Conditionally display 'from' or 'to' based on whether the user is sender or receiver */}
-                                    {loggedInUser === transaction.sender.name
-                                        ? `To ${transaction.receiver.name}`  // If logged in user is sender, display the receiver's name
-                                        : `From ${transaction.sender.name}`}
-                                    {/* // If logged in user is receiver, display the sender's name */}
+                                <p className="text-base font-semibold text-gray-800">
+                                    {/* Display sender and receiver IDs */}
+                                    From{" "}
+                                    <span >
+                                        {transaction.senderId === userId ? username : transaction.senderId}
+                                    </span>{" "}
+                                    to{" "}
+                                    <span >
+                                        {transaction.receiverId === userId ? username : transaction.receiverId}
+                                    </span>
                                 </p>
-
                             </div>
                         </div>
 
                         {/* Amount */}
-                        <div
-                            className={`money-label ${loggedInUser === transaction.receiver.name
-                                ? "positive"  // Green for received money
-                                : "negative"  // Red for sent money
-                                }`}
-                        >
-                            {loggedInUser === transaction.receiver.name
-                                ? `+  ${transaction.amount} EGP`
-                                : `-  ${transaction.amount} EGP`}
+                        <div className="money-label relative right-36">
+                            {`${transaction.amount} EGP`}  {/* Display amount without styling */}
                         </div>
 
                         {/* Date and Status */}
@@ -105,17 +83,9 @@ function ViewHistory() {
                                     return `${year}-${month}-${day}`;  // Format as 'YYYY-MM-DD'
                                 })()}
                             </p>
-                            <p
-                                className={`status ${transaction.status === "SUCCESS"
-                                        ? "success"
-                                        : transaction.status === "PENDING"
-                                            ? "pending"
-                                            : "text-yellow-500" // Apply yellow color if the status is neither SUCCESS nor FAILED
-                                    }`}
-                            >
-                                {transaction.status}
+                            <p className="status text-green-500">
+                                {transaction.status}  {/* Display status without additional styling */}
                             </p>
-
                         </div>
                     </div>
                 ))

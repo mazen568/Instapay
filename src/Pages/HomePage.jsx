@@ -96,10 +96,10 @@ export default function HomePage({focus,setFocus}) {
                 label="send"
               />
               <Card
-                title="Receive Money"
-                image={RecieveIcon}
-                onClick={() => handleCardClick("receive")}
-                label="receive"
+                title="Account Usage"
+                image={BankIcon}
+                onClick={() => handleCardClick("account-usage")}
+                label="account-usage"
               />
               <Card
                 title="View History"
@@ -108,8 +108,8 @@ export default function HomePage({focus,setFocus}) {
                 label="view-history"
               />
               <Card
-                title="My Bank Accounts"
-                image={BankIcon}
+                title="Balance"
+                type="balance"
                 label="profile"
                 isProfilePage={true}
               />

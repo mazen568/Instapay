@@ -8,28 +8,6 @@ function ReceiveMoney() {
     const [receivedTransactions, setReceivedTransactions] = useState([]);
     const [loggedInUser, setLoggedInUser] = useState(null);  // To store the logged-in user info
 
-    useEffect(() => {
-        const fetchUserStatus = async () => {
-            const token = localStorage.getItem("token");
-            try {
-                const response = await axios.get("http://localhost:3000/auth/status", {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
-                console.log("User data fetched:", response.data);
-                setLoggedInUser(response.data.name);
-
-            } catch (err) {
-                console.log("Error fetching user data:", err.response || err);
-                console.log(token);
-
-
-            }
-        };
-
-        fetchUserStatus();
-    }, []);
 
     useEffect(() => {
         const fetchReceivedTransactions = async () => {
