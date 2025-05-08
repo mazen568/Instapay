@@ -111,7 +111,6 @@ export default function HomePage({focus,setFocus}) {
                 title="Balance"
                 type="balance"
                 label="profile"
-                isProfilePage={true}
               />
             </div>
           </div>

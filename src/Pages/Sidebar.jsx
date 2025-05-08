@@ -1,13 +1,21 @@
 /* eslint-disable no-unused-vars */
 /* eslint-disable react/prop-types */
 import "./sidebar.css";
-import { useState } from "react";
+import { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
-const Sidebar = ({ setHandleTabs ,focus,setFocus}) => {
+const Sidebar = ({ focus, setFocus }) => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const currentPath = location.pathname.split("/").pop(); // Get the last part of the path
+    setFocus(currentPath); // Set focus based on the current route
+  }, [location.pathname, setFocus]);
 
   function handleOptions(identifier) {
-    setHandleTabs({ tab: identifier });
-    setFocus(identifier);  // Set the focused item
+    setFocus(identifier); // Set the focused item
+    navigate(`/tab/${identifier}`); // Navigate to the corresponding route
   }
 
   return (
@@ -21,7 +29,7 @@ const Sidebar = ({ setHandleTabs ,focus,setFocus}) => {
           >
             Send Money
           </a>
-        </li> 
+        </li>
         <li>
           <a
             className={`nav-item ${focus === "view-history" ? "focused" : ""}`}
